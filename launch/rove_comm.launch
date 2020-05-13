@@ -1,0 +1,9 @@
+<launch>
+
+     <node pkg="rove_comm_ros" name="rove_comm_node" type="ros_rovecomm.py" output="screen">
+         <param name="port" value="11000"/>
+         <param name="dest_host" value="192.168.1.134"/> <!-- This is IP of drive board -->
+         <param name="enable_joy_control" value="false"/>
+     </node>
+
+</launch>
