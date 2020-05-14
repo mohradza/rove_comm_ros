@@ -63,12 +63,13 @@ class RoveComm(object):
         if(True or enable_joy_control):
             fwd_speed = msg.linear.x
             angular_speed = msg.angular.z
+            print(msg)
 
             self.left_vel_out = 0
             self.left_vel_out = 0
 
-            left_vel = int(fwd_speed*250)
-            right_vel = int(fwd_speed*250)
+            left_vel = int((fwd_speed-angular_speed)*250)
+            right_vel = int((fwd_speed+angular_speed)*250)
 
         else:
             left_vel = 100
@@ -76,12 +77,13 @@ class RoveComm(object):
         #left_vel = 50
         #right_vel = 50 #Are they switched in the DriveBoard so that fwd means fwd?
         print(left_vel)
-        sat_cmds(left_vel, right_vel)
-        buf = struct.pack('>hh', left_vel_out, right_vel_out)
+        print(right_vel)
+        self.sat_cmds(left_vel, right_vel)
+        buf = struct.pack('>hh', self.left_vel_out, self.right_vel_out)
         self.publishRaw(remoteIP, remotePort, data_id, buf)
 
     def sat_cmds(self, left_vel, right_vel):
-        if(left > RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD):
+        if(left_vel > RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD):
             self.left_vel_out = RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD
         elif(left_vel < RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXREVERSE):
             self.left_vel_out = RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXREVERSE
@@ -217,9 +219,10 @@ class UDPRoveComm(object):
             #ROS callbacks are on separate threads and will corrupt state eventually
             if not self.cmdQ.empty():
                 self.runCommand(self.cmdQ.get())
-
+                print("Queue not empty")
             #Check for data ready on a socket to us
             self.checkSockets()
+
 
         #rospy shutting down, avoid FIN_WAIT errors
         if self.sock:
