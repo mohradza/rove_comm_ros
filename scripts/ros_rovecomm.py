@@ -45,7 +45,7 @@ class RoveComm(object):
 
     def publishRaw(self, remoteIP, remotePort, data_id, data):
         #Python3 requires bytes, Python2 uses str as a socket datatype
-        print(len(data))
+        #print(len(data))
 	rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, data_id, 514) + data
 
 	self.sock.sendto(rovecomm_packet, (remoteIP, remotePort))
@@ -55,27 +55,29 @@ class RoveComm(object):
     def publishCmdVel(self, remoteIP, remotePort, enable_joy_control, msg):
         #Data ID for a CMD_VEL:
         data_id = RC_DRIVEBOARD_DRIVELEFTRIGHT_DATAID
-        print(data_id)
+        #print(data_id)
         #Needs to be a 2-byte bytebuffer:
 
         #Todo: Translate lin/ang vels to left / right, mapped between [-1000,1000]
         #Todo: Translate lin/ang vels to left / right, mapped between [-1000,1000)
-        if(enable_joy_control):
-            fwd_speed = msg.twist.linear.x
-            angular_speed = msg.twist.angular.z
+        if(True or enable_joy_control):
+            fwd_speed = msg.linear.x
+            angular_speed = msg.angular.z
 
             self.left_vel_out = 0
             self.left_vel_out = 0
 
-            left_vel = fwd_speed*1000
-            right_vel = fwd_speed*1000
+            left_vel = int(fwd_speed*250)
+            right_vel = int(fwd_speed*250)
+
         else:
             left_vel = 100
             right_vel = 100 #Are they switched in the DriveBoard so that fwd means fwd?
-        left_vel = 50
-        right_vel = 50 #Are they switched in the DriveBoard so that fwd means fwd?
-
-        buf = struct.pack('>hh', left_vel, right_vel)
+        #left_vel = 50
+        #right_vel = 50 #Are they switched in the DriveBoard so that fwd means fwd?
+        print(left_vel)
+        sat_cmds(left_vel, right_vel)
+        buf = struct.pack('>hh', left_vel_out, right_vel_out)
         self.publishRaw(remoteIP, remotePort, data_id, buf)
 
     def sat_cmds(self, left_vel, right_vel):
@@ -177,8 +179,8 @@ class UDPRoveComm(object):
                 #rospy.loginfo("Read %d bytes", len(buffer))
 
                 #Ignore the loopbacks
-                if raddress != self.socket_ip:
-                    self.handlePacket(raddress, rport, buffer)
+                #if raddress != self.socket_ip:
+                    #self.handlePacket(raddress, rport, buffer)
 
     def handlePacket(self, src, srcPort, pkt):
         if len(pkt) > 0:
