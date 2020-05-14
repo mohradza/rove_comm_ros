@@ -179,8 +179,8 @@ class UDPRoveComm(object):
                 #rospy.loginfo("Read %d bytes", len(buffer))
 
                 #Ignore the loopbacks
-                #if raddress != self.socket_ip:
-                    #self.handlePacket(raddress, rport, buffer)
+                # if raddress != self.socket_ip:
+                    # self.handlePacket(raddress, rport, buffer)
 
     def handlePacket(self, src, srcPort, pkt):
         if len(pkt) > 0:
