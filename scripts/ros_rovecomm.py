@@ -28,8 +28,8 @@ from Queue import Queue
 
 
 class RoveComm(object):
-    ROVECOMM_VERSION       = 1
-    ROVECOMM_HEADER_FORMAT = ">BHBHH"
+    ROVECOMM_VERSION       = 2
+    ROVECOMM_HEADER_FORMAT = ">Bhh"
     ROVECOMM_FLAGS  = 0x00
     ROVECOMM_SUBSCRIBE_REQUEST   = 3
     ROVECOMM_UNSUBSCRIBE_REQUEST = 4
@@ -45,8 +45,8 @@ class RoveComm(object):
 
     def publishRaw(self, remoteIP, remotePort, data_id, data):
         #Python3 requires bytes, Python2 uses str as a socket datatype
-
-	rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, self.seq_num, RoveComm.ROVECOMM_FLAGS, data_id, len(data)) + data
+        print(len(data))
+	rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, data_id, 514) + data
 
 	self.sock.sendto(rovecomm_packet, (remoteIP, remotePort))
 	# self.sock.sendto(rovecomm_packet, ('192.168.1.134', remotePort))
@@ -55,6 +55,7 @@ class RoveComm(object):
     def publishCmdVel(self, remoteIP, remotePort, enable_joy_control, msg):
         #Data ID for a CMD_VEL:
         data_id = RC_DRIVEBOARD_DRIVELEFTRIGHT_DATAID
+        print(data_id)
         #Needs to be a 2-byte bytebuffer:
 
         #Todo: Translate lin/ang vels to left / right, mapped between [-1000,1000]
@@ -71,10 +72,10 @@ class RoveComm(object):
         else:
             left_vel = 100
             right_vel = 100 #Are they switched in the DriveBoard so that fwd means fwd?
-        left_vel = 100
-        right_vel = 100 #Are they switched in the DriveBoard so that fwd means fwd?
+        left_vel = 50
+        right_vel = 50 #Are they switched in the DriveBoard so that fwd means fwd?
 
-        buf = struct.pack('<hh', left_vel, right_vel)
+        buf = struct.pack('>hh', left_vel, right_vel)
         self.publishRaw(remoteIP, remotePort, data_id, buf)
 
     def sat_cmds(self, left_vel, right_vel):
