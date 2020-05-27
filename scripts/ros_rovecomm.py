@@ -213,9 +213,12 @@ class UDPRoveComm(object):
         self.cmdQ.put(BridgeCmd(BridgeCmds.SET_CMDVEL, msg))
 
     def joyCb(self, msg):
+        rospy.loginfo_throttle(1, 'New joy msg received!')
         # Edit this to be the button you want to map the enable / disable switch to
         if(msg.buttons[1] == 1):
             # Call the rover class function for sending an estop enable command
+            # Might need to add a delay or switching so we don't spam the board.
+            # Really not sure if that is even a problem.
             self.rover.publishEnableEstop(self.battery_host, self.port)
 
     def handleCmdVel(self, msg):
