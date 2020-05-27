@@ -90,6 +90,7 @@ class RoveComm(object):
        # Sending a 0 should enable it indefinitely.
        buf = struct.pack('>B', 0)
        self.publishRaw(remoteIP, remotePort, data_id, buf)
+       print("publishing e-stop")
 
     def sat_cmds(self, left_vel, right_vel):
         if(left_vel > RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD):
@@ -217,6 +218,7 @@ class UDPRoveComm(object):
         rospy.loginfo_throttle(1, 'New joy msg received!')
         # Edit this to be the button you want to map the enable / disable switch to
         if(msg.buttons[1] == 1):
+            print("hit button B")
             # Call the rover class function for sending an estop enable command
             # Might need to add a delay or switching so we don't spam the board.
             # Really not sure if that is even a problem.
