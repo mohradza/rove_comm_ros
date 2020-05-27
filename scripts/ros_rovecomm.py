@@ -82,6 +82,14 @@ class RoveComm(object):
         buf = struct.pack('>hh', self.left_vel_out, self.right_vel_out)
         self.publishRaw(remoteIP, remotePort, data_id, buf)
 
+   def publishEnableEstop(self, remoteIP, remotePort):
+       data_id = RC_BMSBOARD_SWESTOPs_DATAID
+       # From the manifest, the estop message type only accepts a single unsigned int value
+       # Which controls how long the estop stays enabled.
+       # Sending a 0 should enable it indefinitely.
+       buf = struct.pack('>B', 0)
+       self.publishRaw(remoteIP, remotePort, data_id, buf)
+
     def sat_cmds(self, left_vel, right_vel):
         if(left_vel > RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD):
             self.left_vel_out = RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD
@@ -132,6 +140,8 @@ class UDPRoveComm(object):
             sys.exit(-1)
 
         self.dest_host =  socket.gethostbyname(rospy.get_param('~dest_host'))
+        self.battery_host =  socket.gethostbyname(rospy.get_param('~battery_host'))
+
         # print(self.dest_host)
         self.cmdQ = Queue() #for dealing with async ROS callbacks
 
@@ -139,6 +149,8 @@ class UDPRoveComm(object):
         self.rover = RoveComm(self.sock)
 
         self.cmd_sub = rospy.Subscriber('cmd_vel', Twist, self.onCmdVelPresent)
+
+        self.joy_sub = rospy.Subscriber('joy', Joy, self.joyCb)
 
         #Subscribe to telemetry from the DriveBoard:
         self.rover.subscribe(self.dest_host, self.port)
@@ -200,10 +212,15 @@ class UDPRoveComm(object):
         #Inbound cmd_vel, post to the message q for handling
         self.cmdQ.put(BridgeCmd(BridgeCmds.SET_CMDVEL, msg))
 
+    def joyCb(self, msg):
+        # Edit this to be the button you want to map the enable / disable switch to
+        if(msg.buttons[1] == 1):
+            # Call the rover class function for sending an estop enable command
+            self.rover.publishEnableEstop(self.battery_host, self.port)
+
     def handleCmdVel(self, msg):
         #Given a Twist msg, post to the UDP destination following rovecomm semantics
         self.rover.publishCmdVel(self.dest_host, self.port, self.enable_joy_control, msg)
-
 
     def runCommand(self, cmd):
         if cmd.cmdType == BridgeCmds.SET_CMDVEL:
