@@ -21,6 +21,7 @@ import time
 
 from RoveCommManifest import *
 from geometry_msgs.msg import *
+from sensor_msgs.msg import *
 
 from enum import Enum
 from Queue import Queue
@@ -82,7 +83,7 @@ class RoveComm(object):
         buf = struct.pack('>hh', self.left_vel_out, self.right_vel_out)
         self.publishRaw(remoteIP, remotePort, data_id, buf)
 
-   def publishEnableEstop(self, remoteIP, remotePort):
+    def publishEnableEstop(self, remoteIP, remotePort):
        data_id = RC_BMSBOARD_SWESTOPs_DATAID
        # From the manifest, the estop message type only accepts a single unsigned int value
        # Which controls how long the estop stays enabled.
