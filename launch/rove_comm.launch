@@ -4,6 +4,7 @@
          <param name="port" value="11000"/>
          <param name="battery_host" value="192.168.1.133"/> <!--  -->
          <param name="dest_host" value="192.168.1.134"/> <!-- This is IP of drive board -->
+         <param name="battery_host" value="192.168.1.133"/> <!-- This is IP of battery board -->
          <param name="enable_joy_control" value="true"/>
      </node>
 
