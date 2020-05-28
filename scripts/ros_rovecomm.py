@@ -42,12 +42,15 @@ class RoveComm(object):
     def subscribe(self, remoteIP, remotePort):
         data_id = RoveComm.ROVECOMM_SUBSCRIBE_REQUEST
         data = ''
-        self.publishRaw(remoteIP, remotePort, data_id, data)
+        self.publishRaw(remoteIP, remotePort, data_id, data,1)
 
-    def publishRaw(self, remoteIP, remotePort, data_id, data):
+    def publishRaw(self, remoteIP, remotePort, data_id, data, type):
         #Python3 requires bytes, Python2 uses str as a socket datatype
         #print(len(data))
-	rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, data_id, 514) + data
+        if(type):
+	    rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, data_id, 514) + data
+        else:
+            rovecomm_packet = struct.pack(RoveComm.ROVECOMM_HEADER_FORMAT, RoveComm.ROVECOMM_VERSION, data_id, 769) + data
 
 	self.sock.sendto(rovecomm_packet, (remoteIP, remotePort))
 	# self.sock.sendto(rovecomm_packet, ('192.168.1.134', remotePort))
@@ -81,16 +84,25 @@ class RoveComm(object):
         print(right_vel)
         self.sat_cmds(left_vel, right_vel)
         buf = struct.pack('>hh', self.left_vel_out, self.right_vel_out)
-        self.publishRaw(remoteIP, remotePort, data_id, buf)
+        self.publishRaw(remoteIP, remotePort, data_id, buf,1)
 
     def publishEnableEstop(self, remoteIP, remotePort):
-       data_id = RC_BMSBOARD_SWESTOPs_DATAID
+       #data_id = RC_BMSBOARD_SWESTOPs_DATAID
+       data_id = RC_POWERBOARD_BUSENABLE_DATAID
+       print(data_id)
        # From the manifest, the estop message type only accepts a single unsigned int value
        # Which controls how long the estop stays enabled.
        # Sending a 0 should enable it indefinitely.
-       buf = struct.pack('>B', 0)
-       self.publishRaw(remoteIP, remotePort, data_id, buf)
-       print("publishing e-stop")
+       buf = struct.pack('>BBB', 0, 14, 1)
+       #print(buf)
+       self.publishRaw(remoteIP, remotePort, data_id, buf,0)
+       #print("publishing e-stop")
+
+    def publishDisableEstop(self, remoteIP, remotePort):
+       #data_id = RC_BMSBOARD_SWESTOPs_DATAID
+       data_id = RC_POWERBOARD_BUSENABLE_DATAID
+       buf = struct.pack('>BBB', 0, 14, 0)
+       self.publishRaw(remoteIP, remotePort, data_id, buf,0)
 
     def sat_cmds(self, left_vel, right_vel):
         if(left_vel > RC_DRIVEBOARD_DRIVEMOTORS_DRIVEMAXFORWARD):
@@ -218,11 +230,13 @@ class UDPRoveComm(object):
         rospy.loginfo_throttle(1, 'New joy msg received!')
         # Edit this to be the button you want to map the enable / disable switch to
         if(msg.buttons[1] == 1):
-            print("hit button B")
+            #print("hit button B")
             # Call the rover class function for sending an estop enable command
             # Might need to add a delay or switching so we don't spam the board.
             # Really not sure if that is even a problem.
             self.rover.publishEnableEstop(self.battery_host, self.port)
+        elif(msg.buttons[2] == 1):
+            self.rover.publishDisableEstop(self.battery_host, self.port)
 
     def handleCmdVel(self, msg):
         #Given a Twist msg, post to the UDP destination following rovecomm semantics
